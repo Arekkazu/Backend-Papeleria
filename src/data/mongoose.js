@@ -2,9 +2,8 @@ import mongoose from "mongoose";
 
 export const connectToDatabase = async () => {
   try {
-    console.log("Conecntando a la base de datos");
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Connected to MongoDB");
+    await mongoose.connect(process.env.MONGODB_URI, { dbName: "Papeleria" });
+    console.log("La base de datos está conectada");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
   }
