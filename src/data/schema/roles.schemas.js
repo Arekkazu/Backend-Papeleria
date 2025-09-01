@@ -8,5 +8,5 @@ const RolesSchema = new mongoose.Schema({
     trim: true, // elimina espacios extra
   },
 });
-//ROLE, //SCHEMA //role (asi se llama en mongo)
-export const Role = mongoose.model("Role", RolesSchema, "role");
+//ROLE, //SCHEMA //roles (asi se llama en mongo)
+export const Role = mongoose.model("Role", RolesSchema, "roles");

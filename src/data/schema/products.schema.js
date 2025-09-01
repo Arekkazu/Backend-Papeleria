@@ -25,6 +25,10 @@ const productsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  suppliers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Supplier",
+  }],
 });
 
 export const Product = mongoose.model("Product", productsSchema, "products");
