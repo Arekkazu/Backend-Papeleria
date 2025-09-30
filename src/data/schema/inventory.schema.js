@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-export const inventorySchema = new mongoose.Schema({
+const InventorySchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
+    ref: "Product", // referencia a la colección de productos
     required: true,
   },
   stock: {
@@ -11,4 +11,11 @@ export const inventorySchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+  lastUpdated: {
+    type: Date,
+    default: Date.now,
+  },
 });
+
+// Exporta el modelo con el nombre correcto
+export const Inventory = mongoose.model("Inventory", InventorySchema, "inventory");
