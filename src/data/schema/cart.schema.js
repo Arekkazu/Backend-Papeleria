@@ -41,3 +41,5 @@ export const cartSchema = new mongoose.Schema({
     default: "active",
   },
 });
+
+export const Cart = mongoose.model("Cart", cartSchema, "carts");
