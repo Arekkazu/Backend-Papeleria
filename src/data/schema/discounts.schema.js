@@ -17,6 +17,22 @@ export const discountSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  // Información del personaje Dragon Ball
+  dragonBallCharacter: {
+    name: String,
+    ki: String,
+    image: String,
+  },
+  // Metadata
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  source: {
+    type: String,
+    enum: ['manual', 'dragonball'],
+    default: 'manual',
+  },
 });
 
 export const Discount = mongoose.model("Discount", discountSchema, "discounts");

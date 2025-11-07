@@ -8,13 +8,17 @@ const productsSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
     trim: true,
+    default: "Sin descripción",
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
-    required: true,
+    required: false, // Permitir null para migración
+  },
+  categoryName: {
+    type: String, // Nombre de categoría como string para compatibilidad
+    trim: true,
   },
   price: {
     type: Number,
@@ -29,6 +33,8 @@ const productsSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Supplier",
   }],
+}, {
+  timestamps: true, // Agrega createdAt y updatedAt automáticamente
 });
 
 export const Product = mongoose.model("Product", productsSchema, "products");

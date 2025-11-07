@@ -9,6 +9,7 @@ import cartRoutes from "./cart.routes.js";
 import discountRoutes from "./discount.routes.js";
 import reviewRoutes from "./review.routes.js";
 import salesRoutes from "./sales.routes.js";
+import adminRoutes from "./admin.routes.js";
 
 const router = Router();
 
@@ -17,6 +18,9 @@ router.use("/", Indexrouter);
 
 // Rutas de autenticación
 router.use("/auth", authRouter);
+
+// Rutas de administración (protegidas)
+router.use("/admin", adminRoutes);
 
 // Rutas CRUD
 router.use("/products", productRoutes);

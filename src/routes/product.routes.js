@@ -7,14 +7,13 @@ import {
 
 const router = Router();
 
-// Todas las rutas de productos requieren autenticación
-router.use(authenticateToken);
-
-// Rutas de productos
-router.post("/", requireRole(["admin", "manager"]), ProductController.create);
+// Rutas públicas (sin autenticación)
 router.get("/", ProductController.getAll);
 router.get("/:id", ProductController.getById);
-router.put("/:id", requireRole(["admin", "manager"]), ProductController.update);
-router.delete("/:id", requireRole(["admin"]), ProductController.delete);
+
+// Rutas protegidas (requieren autenticación y roles)
+router.post("/", authenticateToken, requireRole(["admin", "manager"]), ProductController.create);
+router.put("/:id", authenticateToken, requireRole(["admin", "manager"]), ProductController.update);
+router.delete("/:id", authenticateToken, requireRole(["admin"]), ProductController.delete);
 
 export default router;

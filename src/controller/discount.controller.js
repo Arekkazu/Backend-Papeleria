@@ -257,5 +257,64 @@ export const DiscountController = {
         message: "Error interno del servidor"
       });
     }
+  },
+
+  // Crear descuento desde Dragon Ball API
+  createFromDragonBall: async (req, res) => {
+    try {
+      const { characterName, ki, image, percent } = req.body;
+
+      if (!characterName || !percent) {
+        return res.status(400).json({
+          success: false,
+          message: "Nombre del personaje y porcentaje son requeridos"
+        });
+      }
+
+      if (percent < 0 || percent > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "El porcentaje debe estar entre 0 y 100"
+        });
+      }
+
+      // Generar código único basado en el personaje y timestamp
+      const code = `DB_${characterName.toUpperCase().replace(/\s+/g, '_')}_${Date.now()}`;
+
+      // Verificar si ya existe (por si acaso)
+      const existingDiscount = await Discount.findOne({ code });
+      if (existingDiscount) {
+        return res.status(400).json({
+          success: false,
+          message: "El código de descuento ya existe"
+        });
+      }
+
+      const discount = new Discount({
+        code,
+        percent,
+        active: true,
+        source: 'dragonball',
+        dragonBallCharacter: {
+          name: characterName,
+          ki: ki || 'Unknown',
+          image: image || ''
+        }
+      });
+
+      await discount.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Descuento de Dragon Ball creado exitosamente",
+        discount
+      });
+    } catch (error) {
+      console.error("Error al crear descuento desde Dragon Ball:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error interno del servidor"
+      });
+    }
   }
 };

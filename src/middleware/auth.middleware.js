@@ -52,7 +52,7 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
-export const requireRole = (roles) => {
+export const requireRole = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -61,9 +61,12 @@ export const requireRole = (roles) => {
       });
     }
 
-    const userRole = req.user.rol?.name || req.user.rol;
+    // El campo correcto es 'roleName' en el schema de Role
+    const userRole = req.user.rol?.roleName;
     
-    if (!roles.includes(userRole)) {
+    console.log('Usuario:', req.user.username, 'Rol:', userRole, 'Roles requeridos:', roles);
+    
+    if (!userRole || !roles.includes(userRole)) {
       return res.status(403).json({
         success: false,
         message: "No tienes permisos para acceder a este recurso"

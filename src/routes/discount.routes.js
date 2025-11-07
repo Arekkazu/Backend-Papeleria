@@ -7,7 +7,10 @@ import {
 
 const router = Router();
 
-// Todas las rutas de descuentos requieren autenticación
+// Ruta pública para crear descuento desde Dragon Ball
+router.post("/dragonball", DiscountController.createFromDragonBall);
+
+// Todas las demás rutas de descuentos requieren autenticación
 router.use(authenticateToken);
 
 // Rutas de descuentos
