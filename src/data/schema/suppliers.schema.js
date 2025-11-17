@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
 const suppliersSchema = new mongoose.Schema({
-  companyName: {
+  // Usamos `name` para mantenerse consistente con el frontend/admin.controller
+  name: {
     type: String,
     required: true,
     unique: true,
@@ -9,14 +10,19 @@ const suppliersSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     trim: true,
     lowercase: true,
   },
   phone: {
     type: String,
-    required: true,
     trim: true,
+  },
+  address: {
+    type: String,
+    trim: true,
+  },
+  description: {
+    type: String,
   },
 });
 
