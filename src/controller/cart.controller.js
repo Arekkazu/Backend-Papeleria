@@ -1,6 +1,7 @@
 import { Cart } from "../data/schema/cart.schema.js";
 import { Product } from "../data/schema/products.schema.js";
 import { Discount } from "../data/schema/discounts.schema.js";
+import { Inventory } from "../data/schema/inventory.schema.js";
 
 export const CartController = {
   // Obtener carrito del usuario autenticado
@@ -18,20 +19,20 @@ export const CartController = {
           user: userId,
           items: [],
           totalAmount: 0,
-          status: "active"
+          status: "active",
         });
         await cart.save();
       }
 
       res.status(200).json({
         success: true,
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al obtener carrito:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
   },
@@ -45,7 +46,7 @@ export const CartController = {
       if (!productId) {
         return res.status(400).json({
           success: false,
-          message: "ID del producto es requerido"
+          message: "ID del producto es requerido",
         });
       }
 
@@ -54,7 +55,16 @@ export const CartController = {
       if (!product) {
         return res.status(404).json({
           success: false,
-          message: "Producto no encontrado"
+          message: "Producto no encontrado",
+        });
+      }
+
+      // Verificar stock disponible
+      const inventory = await Inventory.findOne({ product: productId });
+      if (!inventory) {
+        return res.status(404).json({
+          success: false,
+          message: "Inventario no encontrado para este producto",
         });
       }
 
@@ -67,30 +77,45 @@ export const CartController = {
           user: userId,
           items: [],
           totalAmount: 0,
-          status: "active"
+          status: "active",
         });
       }
 
       // Verificar si el producto ya está en el carrito
       const existingItemIndex = cart.items.findIndex(
-        item => item.product.toString() === productId
+        (item) => item.product.toString() === productId,
       );
+
+      let newQuantity = quantity;
+      if (existingItemIndex > -1) {
+        // Calcular nueva cantidad si ya existe
+        newQuantity = cart.items[existingItemIndex].quantity + quantity;
+      }
+
+      // Validar que no se exceda el stock disponible
+      if (newQuantity > inventory.stock) {
+        return res.status(400).json({
+          success: false,
+          message: `Stock insuficiente. Solo hay ${inventory.stock} unidades disponibles.`,
+          availableStock: inventory.stock,
+        });
+      }
 
       if (existingItemIndex > -1) {
         // Actualizar cantidad si ya existe
-        cart.items[existingItemIndex].quantity += quantity;
+        cart.items[existingItemIndex].quantity = newQuantity;
       } else {
         // Agregar nuevo item
         cart.items.push({
           product: productId,
           quantity,
-          unitPrice: product.price
+          unitPrice: product.price,
         });
       }
 
       // Recalcular total
       cart.totalAmount = cart.items.reduce((total, item) => {
-        return total + (item.quantity * item.unitPrice);
+        return total + item.quantity * item.unitPrice;
       }, 0);
 
       await cart.save();
@@ -102,13 +127,13 @@ export const CartController = {
       res.status(200).json({
         success: true,
         message: "Producto agregado al carrito",
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al agregar al carrito:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
   },
@@ -123,7 +148,7 @@ export const CartController = {
       if (!quantity || quantity < 0) {
         return res.status(400).json({
           success: false,
-          message: "Cantidad válida es requerida"
+          message: "Cantidad válida es requerida",
         });
       }
 
@@ -131,18 +156,18 @@ export const CartController = {
       if (!cart) {
         return res.status(404).json({
           success: false,
-          message: "Carrito no encontrado"
+          message: "Carrito no encontrado",
         });
       }
 
       const itemIndex = cart.items.findIndex(
-        item => item.product.toString() === productId
+        (item) => item.product.toString() === productId,
       );
 
       if (itemIndex === -1) {
         return res.status(404).json({
           success: false,
-          message: "Producto no encontrado en el carrito"
+          message: "Producto no encontrado en el carrito",
         });
       }
 
@@ -150,13 +175,30 @@ export const CartController = {
         // Eliminar item si cantidad es 0
         cart.items.splice(itemIndex, 1);
       } else {
+        // Verificar stock disponible antes de actualizar
+        const inventory = await Inventory.findOne({ product: productId });
+        if (!inventory) {
+          return res.status(404).json({
+            success: false,
+            message: "Inventario no encontrado para este producto",
+          });
+        }
+
+        if (quantity > inventory.stock) {
+          return res.status(400).json({
+            success: false,
+            message: `Stock insuficiente. Solo hay ${inventory.stock} unidades disponibles.`,
+            availableStock: inventory.stock,
+          });
+        }
+
         // Actualizar cantidad
         cart.items[itemIndex].quantity = quantity;
       }
 
       // Recalcular total
       cart.totalAmount = cart.items.reduce((total, item) => {
-        return total + (item.quantity * item.unitPrice);
+        return total + item.quantity * item.unitPrice;
       }, 0);
 
       await cart.save();
@@ -166,13 +208,13 @@ export const CartController = {
       res.status(200).json({
         success: true,
         message: "Carrito actualizado",
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al actualizar carrito:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
   },
@@ -186,20 +228,20 @@ export const CartController = {
       if (!discountCode) {
         return res.status(400).json({
           success: false,
-          message: "Código de descuento es requerido"
+          message: "Código de descuento es requerido",
         });
       }
 
       // Buscar descuento activo
       const discount = await Discount.findOne({
         code: discountCode,
-        active: true
+        active: true,
       });
 
       if (!discount) {
         return res.status(404).json({
           success: false,
-          message: "Código de descuento no válido o expirado"
+          message: "Código de descuento no válido o expirado",
         });
       }
 
@@ -207,14 +249,14 @@ export const CartController = {
       if (!cart) {
         return res.status(404).json({
           success: false,
-          message: "Carrito no encontrado"
+          message: "Carrito no encontrado",
         });
       }
 
       if (cart.items.length === 0) {
         return res.status(400).json({
           success: false,
-          message: "El carrito está vacío"
+          message: "El carrito está vacío",
         });
       }
 
@@ -223,10 +265,10 @@ export const CartController = {
 
       // Recalcular total con descuento
       const subtotal = cart.items.reduce((total, item) => {
-        return total + (item.quantity * item.unitPrice);
+        return total + item.quantity * item.unitPrice;
       }, 0);
 
-      cart.totalAmount = subtotal - (subtotal * discount.percent / 100);
+      cart.totalAmount = subtotal - (subtotal * discount.percent) / 100;
 
       await cart.save();
       await cart.populate("items.product");
@@ -235,13 +277,13 @@ export const CartController = {
       res.status(200).json({
         success: true,
         message: "Descuento aplicado exitosamente",
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al aplicar descuento:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
   },
@@ -255,21 +297,21 @@ export const CartController = {
       if (!cart) {
         return res.status(404).json({
           success: false,
-          message: "Carrito no encontrado"
+          message: "Carrito no encontrado",
         });
       }
 
       if (!cart.appliedDiscount) {
         return res.status(400).json({
           success: false,
-          message: "No hay descuento aplicado"
+          message: "No hay descuento aplicado",
         });
       }
 
       // Remover descuento y recalcular total
       cart.appliedDiscount = null;
       cart.totalAmount = cart.items.reduce((total, item) => {
-        return total + (item.quantity * item.unitPrice);
+        return total + item.quantity * item.unitPrice;
       }, 0);
 
       await cart.save();
@@ -278,13 +320,13 @@ export const CartController = {
       res.status(200).json({
         success: true,
         message: "Descuento removido",
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al remover descuento:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
   },
@@ -298,7 +340,7 @@ export const CartController = {
       if (!cart) {
         return res.status(404).json({
           success: false,
-          message: "Carrito no encontrado"
+          message: "Carrito no encontrado",
         });
       }
 
@@ -311,13 +353,13 @@ export const CartController = {
       res.status(200).json({
         success: true,
         message: "Carrito vaciado exitosamente",
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al vaciar carrito:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
   },
@@ -327,21 +369,53 @@ export const CartController = {
     try {
       const userId = req.user._id;
 
-      const cart = await Cart.findOne({ user: userId, status: "active" })
-        .populate("items.product");
+      const cart = await Cart.findOne({
+        user: userId,
+        status: "active",
+      }).populate("items.product");
 
       if (!cart) {
         return res.status(404).json({
           success: false,
-          message: "Carrito no encontrado"
+          message: "Carrito no encontrado",
         });
       }
 
       if (cart.items.length === 0) {
         return res.status(400).json({
           success: false,
-          message: "El carrito está vacío"
+          message: "El carrito está vacío",
         });
+      }
+
+      // Validar stock antes de completar la compra
+      for (const item of cart.items) {
+        const inventory = await Inventory.findOne({
+          product: item.product._id,
+        });
+        if (!inventory) {
+          return res.status(400).json({
+            success: false,
+            message: `Inventario no encontrado para ${item.product.name}`,
+          });
+        }
+
+        if (item.quantity > inventory.stock) {
+          return res.status(400).json({
+            success: false,
+            message: `Stock insuficiente para ${item.product.name}. Solo hay ${inventory.stock} unidades disponibles.`,
+            productName: item.product.name,
+            availableStock: inventory.stock,
+          });
+        }
+      }
+
+      // Descontar del inventario
+      for (const item of cart.items) {
+        await Inventory.findOneAndUpdate(
+          { product: item.product._id },
+          { $inc: { stock: -item.quantity }, lastUpdated: Date.now() },
+        );
       }
 
       // Aquí se integraría con el módulo de ventas
@@ -349,17 +423,26 @@ export const CartController = {
       cart.status = "completed";
       await cart.save();
 
+      // Crear un nuevo carrito vacío para el usuario
+      const newCart = new Cart({
+        user: userId,
+        items: [],
+        totalAmount: 0,
+        status: "active",
+      });
+      await newCart.save();
+
       res.status(200).json({
         success: true,
         message: "Compra completada exitosamente",
-        cart
+        cart,
       });
     } catch (error) {
       console.error("Error al completar compra:", error);
       res.status(500).json({
         success: false,
-        message: "Error interno del servidor"
+        message: "Error interno del servidor",
       });
     }
-  }
+  },
 };

@@ -98,12 +98,23 @@ const seedUsers = async () => {
 const seedCategories = async () => {
   try {
     const categories = [
-      { name: "Papelería", description: "Artículos de papelería en general" },
-      { name: "Escritura", description: "Bolígrafos, lápices, marcadores" },
-      { name: "Oficina", description: "Material de oficina" },
-      { name: "Arte", description: "Materiales artísticos" },
-      { name: "Escolar", description: "Material escolar" },
-      { name: "Archivado", description: "Archivadores y organizadores" },
+      { name: "Escolar", description: "Artículos y material escolar" },
+      {
+        name: "Papeles y Formatos",
+        description: "Papeles, resmas y formatos diversos",
+      },
+      {
+        name: "Archivado y Organización",
+        description: "Archivadores, carpetas y organizadores",
+      },
+      {
+        name: "Arte y Dibujo Técnico",
+        description: "Materiales artísticos y dibujo técnico",
+      },
+      {
+        name: "Adhesivos y Corrección",
+        description: "Correctores, cintas y adhesivos",
+      },
     ];
 
     for (const categoryData of categories) {
@@ -121,22 +132,22 @@ const seedSuppliers = async () => {
   try {
     const suppliers = [
       {
-        companyName: "Papelera Central",
+        name: "Papelera Central",
         email: "ventas@papeleracentral.com",
         phone: "+1234567890",
       },
       {
-        companyName: "Distribuidora Escolar",
+        name: "Distribuidora Escolar",
         email: "contacto@distribuidora.com",
         phone: "+0987654321",
       },
       {
-        companyName: "Arte y Diseño SA",
+        name: "Arte y Diseño SA",
         email: "info@arteydiseno.com",
         phone: "+1122334455",
       },
       {
-        companyName: "Oficina Moderna",
+        name: "Oficina Moderna",
         email: "ventas@oficinamoderna.com",
         phone: "+5566778899",
       },
@@ -144,7 +155,7 @@ const seedSuppliers = async () => {
 
     for (const supplierData of suppliers) {
       await Supplier.create(supplierData);
-      console.log(`✅ Proveedor '${supplierData.companyName}' creado`);
+      console.log(`✅ Proveedor '${supplierData.name}' creado`);
     }
 
     console.log("🎉 Seed de proveedores completado exitosamente");
@@ -155,115 +166,123 @@ const seedSuppliers = async () => {
 
 const seedProducts = async () => {
   try {
-    const papeleriaCategory = await Category.findOne({ name: "Papelería" });
-    const escrituraCategory = await Category.findOne({ name: "Escritura" });
-    const oficinaCategory = await Category.findOne({ name: "Oficina" });
-    const arteCategory = await Category.findOne({ name: "Arte" });
     const escolarCategory = await Category.findOne({ name: "Escolar" });
+    const papelesCategory = await Category.findOne({
+      name: "Papeles y Formatos",
+    });
+    const archivadoCategory = await Category.findOne({
+      name: "Archivado y Organización",
+    });
+    const arteCategory = await Category.findOne({
+      name: "Arte y Dibujo Técnico",
+    });
+    const adhesivosCategory = await Category.findOne({
+      name: "Adhesivos y Corrección",
+    });
 
     const papeleraCentral = await Supplier.findOne({
-      companyName: "Papelera Central",
+      name: "Papelera Central",
     });
     const distribuidoraEscolar = await Supplier.findOne({
-      companyName: "Distribuidora Escolar",
+      name: "Distribuidora Escolar",
     });
     const arteDiseno = await Supplier.findOne({
-      companyName: "Arte y Diseño SA",
+      name: "Arte y Diseño SA",
     });
     const oficinaModerna = await Supplier.findOne({
-      companyName: "Oficina Moderna",
+      name: "Oficina Moderna",
     });
 
     const products = [
       {
-        name: "Cuaderno Universitario",
-        description: "Cuaderno de 100 hojas rayadas, tapa dura",
-        category: papeleriaCategory._id,
-        price: 15.99,
+        name: "Cuaderno Norma",
+        description: "Cuaderno argollado tapa dura grande multimateria",
+        category: escolarCategory._id,
+        price: 6500,
         image:
           "https://cdn1.totalcommerce.cloud/normaco/product-image/es/cuaderno-argollado-tapa-dura-grande-multimateria-7m-cuadriculado-academico-rojo-1.webp",
         suppliers: [papeleraCentral._id, distribuidoraEscolar._id],
       },
       {
-        name: "Bolígrafo BIC Azul",
-        description: "Bolígrafo de tinta azul punta media, pack de 4",
-        category: escrituraCategory._id,
-        price: 12.5,
+        name: "Bolígrafo BIC",
+        description: "Bolígrafo BIC needle clásico x4 unidades",
+        category: escolarCategory._id,
+        price: 1200,
         image:
           "https://comercialpapelera.com.co/tienda/13015-large_default/boligrafo-bic-needle-clasico-x4-und.jpg",
         suppliers: [papeleraCentral._id],
       },
       {
-        name: "Resaltador Amarillo",
-        description: "Marcador resaltador color amarillo fluorescente",
-        category: escrituraCategory._id,
-        price: 8.75,
+        name: "Resma de papel carta",
+        description: "Resma de papel bond blanco carta, 500 hojas",
+        category: papelesCategory._id,
+        price: 18000,
+        image:
+          "https://cdnx.jumpseller.com/la-cali/image/9036718/7702148000043_resma_carta_blanca_1.jpg?1658954704",
+        suppliers: [papeleraCentral._id],
+      },
+      {
+        name: "Archivador AZ",
+        description: "Legajador AZ económico carta/oficio",
+        category: archivadoCategory._id,
+        price: 9500,
+        image:
+          "https://www.papeleriaelmayorista.com/wp-content/uploads/legajador-az-economico-carta-oficio.jpg",
+        suppliers: [oficinaModerna._id],
+      },
+      {
+        name: "Marcadores Sharpie",
+        description: "Marcador permanente Sharpie fino por 8 colores básicos",
+        category: arteCategory._id,
+        price: 22000,
         image:
           "https://panamericana.vtexassets.com/arquivos/ids/383487/marcador-permanente-sharpie-fino-por-8-basicos-5401178077408.jpg?v=637494408663200000",
-        suppliers: [distribuidoraEscolar._id],
-      },
-      {
-        name: "Grapadora Metálica",
-        description: "Grapadora metálica para oficina, capacidad 20 hojas",
-        category: oficinaCategory._id,
-        price: 25.99,
-        image:
-          "https://panamericana.vtexassets.com/arquivos/ids/287738-800-auto?v=636578389762300000&width=800&height=auto&aspect=true",
-        suppliers: [papeleraCentral._id, oficinaModerna._id],
-      },
-      {
-        name: "Block de Dibujo A4",
-        description: "Block de hojas para dibujo artístico, 50 hojas",
-        category: arteCategory._id,
-        price: 18.5,
-        image:
-          "https://panamericana.vtexassets.com/arquivos/ids/360195/colores-faber-castell-supersoft-x-50-unidades-7891360654124.jpg?v=637346503820430000",
         suppliers: [arteDiseno._id],
       },
       {
-        name: "Tijeras Escolares",
+        name: "Corrector líquido Pelikan",
+        description: "Corrector líquido tipo bolígrafo de 7ml Pelikan",
+        category: adhesivosCategory._id,
+        price: 3500,
+        image:
+          "https://tuexpres.com/web/image/product.image/2719/image_1024/Corrector%20liquido%20tipo%20boligrafo%20de%207ml%20Pelikan%2012u?unique=2004400",
+        suppliers: [papeleraCentral._id],
+      },
+      {
+        name: "Tijeras escolares",
         description: "Tijeras escolares de acero inoxidable, punta redonda",
         category: escolarCategory._id,
-        price: 9.5,
+        price: 2500,
         image:
           "https://megadistribuciones.co/wp-content/uploads/2021/10/MEGADISTRIBUCIONES-WEB-8.webp",
         suppliers: [distribuidoraEscolar._id],
       },
       {
-        name: "Cinta Adhesiva",
+        name: "Cinta adhesiva",
         description: "Cinta adhesiva transparente, 48mm x 100m",
-        category: oficinaCategory._id,
-        price: 6.8,
+        category: adhesivosCategory._id,
+        price: 1800,
         image:
           "https://comercialpapelera.com.co/tienda/3679-large_default/cinta-transparente-48mx100m.jpg",
         suppliers: [papeleraCentral._id, oficinaModerna._id],
       },
       {
-        name: "Carpeta Plástica",
+        name: "Carpeta plástica",
         description: "Carpeta plástica con gancho, tamaño carta",
-        category: oficinaCategory._id,
-        price: 7.2,
+        category: archivadoCategory._id,
+        price: 3200,
         image:
           "https://panamericana.vtexassets.com/arquivos/ids/287738-800-auto?v=636578389762300000&width=800&height=auto&aspect=true",
         suppliers: [oficinaModerna._id],
       },
       {
-        name: "Lápices de Colores x24",
-        description: "Set de 24 lápices de colores profesionales",
+        name: "Lápices de colores",
+        description: "Colores Faber-Castell Supersoft x 50 unidades",
         category: arteCategory._id,
-        price: 32.0,
+        price: 7800,
         image:
           "https://panamericana.vtexassets.com/arquivos/ids/360195/colores-faber-castell-supersoft-x-50-unidades-7891360654124.jpg?v=637346503820430000",
         suppliers: [arteDiseno._id],
-      },
-      {
-        name: "Resma de Papel Carta",
-        description: "Resma de papel bond blanco, 500 hojas",
-        category: papeleriaCategory._id,
-        price: 22.0,
-        image:
-          "https://cdnx.jumpseller.com/la-cali/image/9036718/7702148000043_resma_carta_blanca_1.jpg?1658954704",
-        suppliers: [papeleraCentral._id],
       },
     ];
 
@@ -432,7 +451,7 @@ const runAllSeeds = async () => {
     console.log("\n📊 Resumen de datos creados:");
     console.log("   - Roles: 3 (admin, manager, user)");
     console.log("   - Usuarios: 4 (incluyendo admin)");
-    console.log("   - Categorías: 6");
+    console.log("   - Categorías: 5");
     console.log("   - Proveedores: 4");
     console.log("   - Productos: 10 con inventario");
     console.log("   - Descuentos: 5");

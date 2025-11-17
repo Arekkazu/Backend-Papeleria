@@ -26,7 +26,7 @@ export const AdminController = {
       const completedCartsData = await Cart.find({ status: "completed" });
       const totalRevenue = completedCartsData.reduce(
         (sum, cart) => sum + cart.totalAmount,
-        0
+        0,
       );
 
       // Productos más vendidos (simulado con carritos)
@@ -155,7 +155,7 @@ export const AdminController = {
       const user = await User.findByIdAndUpdate(
         userId,
         { role: roleId },
-        { new: true }
+        { new: true },
       ).populate("role");
 
       if (!user) {
@@ -226,8 +226,24 @@ export const AdminController = {
         query.name = { $regex: search, $options: "i" };
       }
 
+      // Si se filtra por categoría, buscar el ID de la categoría por su nombre
       if (category) {
-        query.category = category;
+        const categoryDoc = await Category.findOne({ name: category });
+        if (categoryDoc) {
+          query.category = categoryDoc._id;
+        } else {
+          // Si no existe la categoría, devolver array vacío
+          return res.status(200).json({
+            success: true,
+            products: [],
+            pagination: {
+              total: 0,
+              page: parseInt(page),
+              limit: parseInt(limit),
+              pages: 0,
+            },
+          });
+        }
       }
 
       const products = await Product.find(query)
@@ -238,9 +254,16 @@ export const AdminController = {
 
       const total = await Product.countDocuments(query);
 
+      // Agregar categoryName a cada producto para facilitar el acceso en el frontend
+      const productsWithCategoryName = products.map((product) => {
+        const productObj = product.toObject();
+        productObj.categoryName = product.category?.name || "";
+        return productObj;
+      });
+
       res.status(200).json({
         success: true,
-        products,
+        products: productsWithCategoryName,
         pagination: {
           total,
           page: parseInt(page),
@@ -262,13 +285,35 @@ export const AdminController = {
     try {
       const productData = req.body;
 
+      // Si viene categoryName, buscar el ID de la categoría
+      if (productData.categoryName) {
+        const categoryDoc = await Category.findOne({
+          name: productData.categoryName,
+        });
+        if (categoryDoc) {
+          productData.category = categoryDoc._id;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: `La categoría "${productData.categoryName}" no existe. Por favor, créala primero.`,
+          });
+        }
+        delete productData.categoryName; // Eliminar categoryName del objeto
+      }
+
       const product = new Product(productData);
       await product.save();
+
+      // Poblar la categoría para la respuesta
+      await product.populate("category");
 
       res.status(201).json({
         success: true,
         message: "Producto creado exitosamente",
-        product,
+        product: {
+          ...product.toObject(),
+          categoryName: product.category?.name || "",
+        },
       });
     } catch (error) {
       console.error("Error al crear producto:", error);
@@ -285,6 +330,22 @@ export const AdminController = {
       const { productId } = req.params;
       const updateData = req.body;
 
+      // Si viene categoryName, buscar el ID de la categoría
+      if (updateData.categoryName) {
+        const categoryDoc = await Category.findOne({
+          name: updateData.categoryName,
+        });
+        if (categoryDoc) {
+          updateData.category = categoryDoc._id;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: `La categoría "${updateData.categoryName}" no existe. Por favor, créala primero.`,
+          });
+        }
+        delete updateData.categoryName; // Eliminar categoryName del objeto
+      }
+
       const product = await Product.findByIdAndUpdate(productId, updateData, {
         new: true,
       }).populate("category");
@@ -299,7 +360,10 @@ export const AdminController = {
       res.status(200).json({
         success: true,
         message: "Producto actualizado exitosamente",
-        product,
+        product: {
+          ...product.toObject(),
+          categoryName: product.category?.name || "",
+        },
       });
     } catch (error) {
       console.error("Error al actualizar producto:", error);
@@ -386,7 +450,7 @@ export const AdminController = {
       const discount = await Discount.findByIdAndUpdate(
         discountId,
         updateData,
-        { new: true }
+        { new: true },
       );
 
       if (!discount) {
@@ -445,9 +509,7 @@ export const AdminController = {
       const { page = 1, limit = 10, search = "" } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = search
-        ? { name: { $regex: search, $options: "i" } }
-        : {};
+      const query = search ? { name: { $regex: search, $options: "i" } } : {};
 
       const categories = await Category.aggregate([
         { $match: query },
@@ -563,7 +625,7 @@ export const AdminController = {
       const category = await Category.findByIdAndUpdate(
         categoryId,
         { name, description },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!category) {
@@ -622,9 +684,7 @@ export const AdminController = {
       const { page = 1, limit = 10, search = "" } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = search
-        ? { name: { $regex: search, $options: "i" } }
-        : {};
+      const query = search ? { name: { $regex: search, $options: "i" } } : {};
 
       const suppliers = await Supplier.find(query)
         .skip(skip)
@@ -723,7 +783,7 @@ export const AdminController = {
       const supplier = await Supplier.findByIdAndUpdate(
         supplierId,
         { name, email, phone, address, description },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!supplier) {
